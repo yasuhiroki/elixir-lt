@@ -291,6 +291,17 @@ elixir -e '
 
 ---
 
+## Streamを調べる
+
+- Stream.filter_map なるものがあるらしい
+  - filterしつつmapする
+  - map内でIO.Putsすれば行ごとに出力できそう
+
+いけそう
+
+
+---
+
 ## Stream.filter_map で試す
 
 ```elixir
@@ -304,25 +315,84 @@ elixir -e '
 
 ---
 
-## パフォーマンスを比較してみる
+- せっかくなら、並列処理してみたい
 
-空行を含むファイルを10万行にして試す
+---
+
+## Flow を試す
+
+```elixir
+mix run -e '
+  "./file"
+    |> File.stream!
+    |> Flow.from_enumerable
+    |> Flow.filter_map(&(&1 != "\n"), &(String.trim(&1, "\n") |> IO.puts))
+    |> Enum.to_list
+  '
+```
+
+---
+
+## パフォーマンスを比較してみると
+
+空行を含むファイルを270万行にして試す
 
 - `File.read` 版
-  - elixir -e   0.35s user 0.23s system 41% cpu 1.392 total
+  - elixir -e   11.95s user 4.71s system 42% cpu 39.058 total
 - `Stream.filter` 版
-  - elixir -e   0.59s user 0.20s system 49% cpu 1.601 total
+  - elixir -e   11.29s user 1.19s system 35% cpu 34.669 total
 - `Stream.filter_map` 版
-  - elixir -e   1.57s user 0.38s system 92% cpu 2.095 total
+  - elixir -e   31.92s user 4.71s system 89% cpu 40.943 total
+- `Flow` 版
+  - mix run -e   46.20s user 14.16s system 121% cpu 49.482 total
 
-遅くなっている...
+- String.trim や IO.puts が重い
+
+---
+
+## IOについて調べてみる
+
+- IO.binstream なるものがあるらしい
+  - writeのstream化ができるらしい
+
+いけそう
+
+---
+
+## IO.binstream を試す
+
+```elixir
+elixir -e '
+  "./file"
+    |> File.stream!
+    |> Stream.filter(&(&1 != "\n"))
+    |> Stream.into(IO.binstream(:stdio, :line))
+    |> Stream.run
+  '
+```
+
+elixir -e   17.37s user 4.29s system 61% cpu 35.068 total
+
+---
+
+## さらにFlowで試...したい
+
+```elixir
+mix run -e '
+  "./file"
+    |> File.stream!
+    |> Flow.from_enumerable
+    |> Flow.filter(&(&1 != "\n"))
+    |> ??????
+    |> Flow.run
+  '
+```
 
 ---
 
 ## 課題
 
-- マルチプロセスで実行すれば
-- パターンマッチを活用した記法も取り入れたい
+- Flowでwrite streamingしたかった
 
 ---
 
