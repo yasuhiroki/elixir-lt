@@ -372,8 +372,6 @@ elixir -e '
   '
 ```
 
-elixir -e   17.37s user 4.29s system 61% cpu 35.068 total
-
 ---
 
 ## さらにFlowで試...したい
@@ -388,6 +386,47 @@ mix run -e '
     |> Flow.run
   '
 ```
+
+---
+
+## さらにFlowで試...したい
+
+出力する部分だけStreamにするのはできた
+
+```elixir
+mix run -e '
+  "./file"
+    |> File.stream!
+    |> Flow.from_enumerable
+    |> Flow.filter(&(&1 != "\n"))
+    |> Flow.partition
+    |> Stream.into(IO.binstream(:stdio, :line))
+    |> Stream.run
+  '
+```
+
+mix run -e   21.86s user 6.86s system 72% cpu 39.403 total
+
+---
+
+## パフォーマンスを比較してみると(2)
+
+空行を含むファイルを270万行にして試す
+
+- `File.read` 版
+  - elixir -e    11.95s user 4.71s system 42% cpu 39.058 total
+- `Stream.filter` 版
+  - elixir -e    11.29s user 1.19s system 35% cpu 34.669 total
+- `Stream.filter_map` 版
+  - elixir -e    31.92s user 4.71s system 89% cpu 40.943 total
+- `Flow` 版
+  - mix run -e   46.20s user 14.16s system 121% cpu 49.482 total
+- `Stream.binstream` 版
+  - elixir -e    17.37s user 4.29s system 61% cpu 35.068 total
+- `Flow + Stream.binstream` 版
+  - mix run -e   21.86s user 6.86s system 72% cpu 39.403 total
+
+少し早くなった
 
 ---
 
