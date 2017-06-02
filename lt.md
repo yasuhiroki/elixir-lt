@@ -436,5 +436,15 @@ mix run -e   21.86s user 6.86s system 72% cpu 39.403 total
 
 ---
 
+## 考参
+
+- http://cloudless.studio/articles/12-elixir-vs-ruby-file-i-o-performance-updated
+- https://hexdocs.pm/flow/Flow.html
+- http://qiita.com/HirofumiTamori/items/8e076d28ef40d98d99f1
+
+---
+
+template: inverse
+
 ## Fin
 
